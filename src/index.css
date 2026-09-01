@@ -1,0 +1,13 @@
+.font-display {
+  font-family: "Oswald", sans-serif;
+  letter-spacing: 0.02em;
+}
+.font-body {
+  font-family: "Inter", sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}

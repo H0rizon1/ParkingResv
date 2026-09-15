@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ParkingSquare, ChevronRight } from "lucide-react";
 import { useApp } from "../context/AppContext.jsx";
 import { venueConfig } from "../config/venueConfig.js";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 
 export default function Landing() {
   const { totalAvailableNow, toast } = useApp();
@@ -15,28 +16,29 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen w-full font-body flex flex-col items-center justify-center p-6 text-center bg-[#1F2226]">
+    <div className="min-h-screen w-full font-body flex flex-col items-center justify-center p-6 text-center bg-[var(--bg)]">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5 bg-[#FFC72C22]">
         <ParkingSquare size={14} color="#FFC72C" />
         <span className="font-display text-xs uppercase tracking-wide text-[#FFC72C]">{venueConfig.appName}</span>
       </div>
 
-      <h1 className="font-display text-4xl md:text-5xl uppercase max-w-xl text-[#F5F4F0]">
+      <h1 className="font-display text-4xl md:text-5xl uppercase max-w-xl text-[var(--text)]">
         {venueConfig.tagline}
       </h1>
-      <p className="text-sm mt-3 max-w-md text-[#8B8E92]">
+      <p className="text-sm mt-3 max-w-md text-[var(--text-muted)]">
         {venueConfig.subtext}
       </p>
 
-      <div className="mt-6 px-5 py-3 rounded-md bg-[#2E3238] border border-[#3A3F45]">
+      <div className="mt-6 px-5 py-3 rounded-md bg-[var(--surface)] border border-[var(--border-c)]">
         <span className="font-display text-2xl text-[#4CAF6D]">{totalAvailableNow}</span>
-        <span className="text-sm ml-2 text-[#C9CBC7]">{venueConfig.spaceLabel.toLowerCase()}s open right now</span>
+        <span className="text-sm ml-2 text-[var(--text-secondary)]">{venueConfig.spaceLabel.toLowerCase()}s open right now</span>
       </div>
 
       <div className="flex gap-3 mt-8">
         <button
           onClick={() => navigate("/login")}
-          className="px-6 py-3 rounded font-display uppercase tracking-wide bg-[#2E3238] text-[#F5F4F0] border border-[#3A3F45]"
+          className="px-6 py-3 rounded font-display uppercase tracking-wide bg-[var(--surface)] text-[var(--text)] border border-[var(--border-c)]"
         >
           Log In
         </button>
@@ -52,8 +54,8 @@ export default function Landing() {
         {steps.map((step) => (
           <div key={step.n}>
             <div className="font-display text-xl text-[#FFC72C]">{step.n}</div>
-            <div className="font-display text-sm uppercase mt-1 text-[#F5F4F0]">{step.t}</div>
-            <div className="text-xs mt-1 text-[#8B8E92]">{step.d}</div>
+            <div className="font-display text-sm uppercase mt-1 text-[var(--text)]">{step.t}</div>
+            <div className="text-xs mt-1 text-[var(--text-muted)]">{step.d}</div>
           </div>
         ))}
       </div>

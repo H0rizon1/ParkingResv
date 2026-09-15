@@ -10,13 +10,18 @@ const initialLots = [
   { id: "lotC", name: `${venueConfig.locationLabel} C — ${venueConfig.zones[1]?.label || "Reserved"}`, zone: venueConfig.zones[1]?.value || venueConfig.zones[0].value, rows: 1, cols: 6 },
 ];
 
-export const TIME_SLOTS = [
-  "7:00 – 9:00 AM",
-  "9:00 – 11:00 AM",
-  "11:00 AM – 1:00 PM",
-  "1:00 – 3:00 PM",
-  "3:00 – 5:00 PM",
+export const TIME_BOUNDARIES = [
+  "7:30 AM", "9:00 AM", "10:30 AM", "12:00 PM", "1:30 PM",
+  "3:00 PM", "4:30 PM", "6:00 PM", "7:30 PM", "9:00 PM",
 ];
+
+export function formatRange(startIndex, endIndex) {
+  return `${TIME_BOUNDARIES[startIndex]} - ${TIME_BOUNDARIES[endIndex]}`;
+}
+
+function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd;
+}
 
 function buildStalls(lots) {
   const stalls = [];
@@ -47,6 +52,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null); // session not restored — log in each visit
   const [toast, setToast] = useState(null);
 
+
   // Persist to localStorage so data survives refresh / offline use —
   // no server or network connection required.
   useEffect(() => {
@@ -57,25 +63,37 @@ export function AppProvider({ children }) {
     }
   }, [lots, reservations, users]);
 
+  const [theme, setTheme] = useState(() => localStorage.getItem("campus-parking-theme") || "dark");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("campus-parking-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
   const showToast = (msg, tone = "ok") => {
     setToast({ msg, tone });
     setTimeout(() => setToast(null), 2600);
   };
 
-  const isStallTaken = (stallId, date, slot) =>
-    reservations.some((r) => r.stallId === stallId && r.date === date && r.slot === slot);
+  const isStallTaken = (stallId, date, startIndex, endIndex) =>
+    reservations.some(
+      (r) => r.stallId === stallId && r.date === date &&
+      rangesOverlap(startIndex, endIndex, r.startIndex, r.endIndex)
+    );
 
   const lotStalls = (lotId) => stalls.filter((s) => s.lotId === lotId);
 
-  const lotAvailability = (lotId, date, slot) => {
+  const lotAvailability = (lotId, date, startIndex, endIndex) => {
     const all = lotStalls(lotId);
-    const taken = all.filter((s) => isStallTaken(s.id, date, slot)).length;
+    const taken = all.filter((s) => isStallTaken(s.id, date, startIndex, endIndex)).length;
     return { total: all.length, available: all.length - taken };
   };
 
   const totalAvailableNow = useMemo(() => {
     const now = new Date().toISOString().slice(0, 10);
-    return lots.reduce((sum, l) => sum + lotAvailability(l.id, now, TIME_SLOTS[0]).available, 0);
+    return lots.reduce((sum, l) => sum + lotAvailability(l.id, now, 0, 1).available, 0);
   }, [lots, reservations]);
 
   const register = ({ name, id, email, password, plate, role }) => {
@@ -121,9 +139,17 @@ export function AppProvider({ children }) {
     showToast("Vehicle added", "ok");
   };
 
-  const reserveStall = ({ stallId, lotId, date, slot, vehiclePlate }) => {
-    if (isStallTaken(stallId, date, slot)) {
-      showToast("That stall was just taken — pick another", "bad");
+  const removeVehicle = (vehiclePlate) => {
+    if (!user) return;
+    const updated = { ...user, vehicles: user.vehicles.filter((v) => v.id !== vehiclePlate) };
+    setUser(updated);
+    setUsers((prev) => prev.map((u) => (u.idNum === user.idNum ? updated : u)));
+    showToast("Vehicle removed", "ok");
+  };
+
+  const reserveStall = ({ stallId, lotId, date, startIndex, endIndex, vehiclePlate }) => {
+    if (isStallTaken(stallId, date, startIndex, endIndex)) {
+      showToast("That stall overlaps an existing booking — pick another time or stall", "bad");
       return false;
     }
     const newRes = {
@@ -131,9 +157,10 @@ export function AppProvider({ children }) {
       stallId,
       lotId,
       date,
-      slot,
+      startIndex,
+      endIndex,
       user: user.name,
-      vehiclePlate,
+      vehiclePlate
     };
     setReservations((prev) => [...prev, newRes]);
     showToast("Spot reserved. See you there.", "ok");
@@ -163,6 +190,8 @@ export function AppProvider({ children }) {
     users,
     user,
     toast,
+    theme,
+    toggleTheme,
     showToast,
     isStallTaken,
     lotStalls,

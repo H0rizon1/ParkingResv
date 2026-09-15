@@ -36,6 +36,9 @@ const CONFIGS = {
       { value: "guest", label: "Guest" },
       { value: "member", label: "Member" },
       { value: "admin", label: "Admin" },
+      { value: "student", label: "Studebt" },
+      { value: "faculty", label: "Faculty/Department" },
+      { value: "employee", label: "Employee" },
     ],
     zones: [
       { value: "Standard", label: "Standard" },

@@ -8,7 +8,7 @@ import ThemeToggle from "./ThemeToggle.jsx";
 
 const tabClass = ({ isActive }) =>
   `px-4 py-2 rounded-t-md transition-colors uppercase font-display text-sm ${
-    isActive ? "text-[#FFC72C] border-b-[3px] border-[#FFC72C] bg-[#1F2226]" : "text-[#C9CBC7] border-b-[3px] border-transparent"
+    isActive ? "text-[#FFC72C] border-b-[3px] border-[#FFC72C] bg-[var(--bg)]" : "text-[var(--text-secondary)] border-b-[3px] border-transparent"
   }`;
 
 export default function Navbar() {
@@ -34,6 +34,7 @@ export default function Navbar() {
             {venueConfig.roles.find((r) => r.value === user.role)?.label || user.role}
           </Pill>
           <span className="text-sm text-[var(--text-secondary)]">{user.name}</span>
+          <ThemeToggle />
           <button onClick={handleLogout} className="p-2 rounded hover:opacity-80 text-[var(--text-secondary)]">
             <LogOut size={16} />
           </button>

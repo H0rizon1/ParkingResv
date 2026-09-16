@@ -15,11 +15,11 @@ export default function Profile() {
 
   return (
     <div className="p-6 max-w-xl">
-      <h2 className="font-display text-xl uppercase mb-4 text-[#F5F4F0]">Profile</h2>
+      <h2 className="font-display text-xl uppercase mb-4 text-[var(--text)]">Profile</h2>
 
       <div className="p-4 rounded-md mb-6 bg-[var(--surface)] border border-[var(--border-c)]">
         <div className="text-xs uppercase font-display mb-3 text-[var(--text-secondary)]">Personal Info</div>
-        <div className="space-y-2 text-sm text-[#F5F4F0]">
+        <div className="space-y-2 text-sm text-[var(--text)]">
           <div><span className="text-[var(--text-muted)]">Name:</span> {user.name}</div>
           <div><span className="text-[var(--text-muted)]">ID:</span> {user.idNum}</div>
           <div><span className="text-[var(--text-muted)]">Email:</span> {user.email}</div>
@@ -36,7 +36,7 @@ export default function Profile() {
             <p className="text-sm text-[var(--text-muted)]">No vehicles on file yet.</p>
           ) : (
             user.vehicles.map((v) => (
-              <div key={v.id} className="flex items-center gap-2 px-3 py-2 rounded bg-[var(--bg)] border border-[var(--border-c)] text-sm text-[#F5F4F0]">
+              <div key={v.id} className="flex items-center gap-2 px-3 py-2 rounded bg-[var(--bg)] border border-[var(--border-c)] text-sm text-[var(--text)]">
                 <Car size={14} /> {v.plate}
               </div>
             ))
@@ -47,7 +47,7 @@ export default function Profile() {
             value={plate}
             onChange={(e) => setPlate(e.target.value)}
             placeholder="Add plate number (e.g. ABC 1234)"
-            className="flex-1 px-3 py-2 rounded text-sm bg-[var(--bg)] text-[#F5F4F0] border border-[var(--border-c)]"
+            className="flex-1 px-3 py-2 rounded text-sm bg-[var(--bg)] text-[var(--text)] border border-[var(--border-c)]"
           />
           <button onClick={handleAdd} className="px-4 py-2 rounded font-display text-xs uppercase flex items-center gap-1 bg-[#FFC72C] text-[var(--bg)]">
             <Plus size={14} /> Add

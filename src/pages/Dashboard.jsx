@@ -16,14 +16,14 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <h2 className="font-display text-xl uppercase mb-4 text-[#F5F4F0]">Dashboard</h2>
+      <h2 className="font-display text-xl uppercase mb-4 text-[var(--text)]">Dashboard</h2>
 
       <div className="mb-6 p-4 rounded-md max-w-xl bg-[var(--surface)] border border-[var(--border-c)]">
         {upcoming ? (
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase font-display text-[var(--text-muted)]">Upcoming Reservation</div>
-              <div className="font-display text-lg mt-1 text-[#F5F4F0]">
+              <div className="font-display text-lg mt-1 text-[var(--text)]">
                 {lots.find((l) => l.id === upcoming.lotId)?.name} — {venueConfig.spaceLabel} {stalls.find((s) => s.id === upcoming.stallId)?.label}
               </div>
               <div className="text-xs mt-1 flex items-center gap-1 text-[var(--text-muted)]">
@@ -36,7 +36,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase font-display text-[var(--text-muted)]">No Active Reservation</div>
-              <div className="text-sm mt-1 text-[#F5F4F0]">Book a {venueConfig.spaceLabel.toLowerCase()} ahead of time so you're not searching on arrival.</div>
+              <div className="text-sm mt-1 text-[var(--text)]">Book a {venueConfig.spaceLabel.toLowerCase()} ahead of time so you're not searching on arrival.</div>
             </div>
             <button
               onClick={() => navigate("/reserve")}
@@ -71,7 +71,7 @@ export default function Dashboard() {
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[#F5F4F0] border border-[var(--border-c)]"
+          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[var(--text)] border border-[var(--border-c)]"
         />
         <select
           value={startIndex}
@@ -80,7 +80,7 @@ export default function Dashboard() {
             setStartIndex(newStart);
             if (endIndex <= newStart) setEndIndex(newStart + 1);
           }}
-          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[#F5F4F0] border border-[var(--border-c)]"
+          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[var(--text)] border border-[var(--border-c)]"
         >
           {TIME_BOUNDARIES.slice(0, -1).map((t, i) => (
             <option key={i} value={i}>{t}</option>
@@ -89,7 +89,7 @@ export default function Dashboard() {
         <select
           value={endIndex}
           onChange={(e) => setEndIndex(Number(e.target.value))}
-          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[#F5F4F0] border border-[var(--border-c)]"
+          className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[var(--text)] border border-[var(--border-c)]"
         >
           {TIME_BOUNDARIES.map((t, i) => (i > startIndex ? <option key={i} value={i}>{t}</option> : null))}
         </select>
@@ -101,7 +101,7 @@ export default function Dashboard() {
           return (
             <div key={lot.id} className="p-4 rounded-md bg-[var(--surface)] border border-[var(--border-c)]">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-display text-sm uppercase text-[#F5F4F0]">{lot.name}</span>
+                <span className="font-display text-sm uppercase text-[var(--text)]">{lot.name}</span>
                 <Pill color={lot.zone === "Faculty" ? "#FFC72C" : "#4CAF6D"}>{lot.zone}</Pill>
               </div>
               <div className="text-3xl font-display" style={{ color: available > 0 ? "#4CAF6D" : "#E2574C" }}>

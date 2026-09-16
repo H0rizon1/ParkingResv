@@ -7,7 +7,7 @@ export default function MyReservations() {
 
   return (
     <div className="p-6">
-      <h2 className="font-display text-xl uppercase mb-4 text-[#F5F4F0]">My Reservations</h2>
+      <h2 className="font-display text-xl uppercase mb-4 text-[var(--text)]">My Reservations</h2>
       {myReservations.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)8B8E92]">No reservations yet. Head to the Reserve tab to book a stall.</p>
       ) : (
@@ -17,7 +17,7 @@ export default function MyReservations() {
             return (
               <div key={r.id} className="flex items-center justify-between p-4 rounded-md bg-[var(--surface)] border border-[var(--border-c)]">
                 <div>
-                  <div className="font-display text-sm uppercase text-[#F5F4F0]">{lot?.name}</div>
+                  <div className="font-display text-sm uppercase text-[var(--text)]">{lot?.name}</div>
                   <div className="text-xs flex items-center gap-3 mt-1 text-[var(--text-muted)]">
                     <span className="flex items-center gap-1"><MapPin size={12} /> Stall {stalls.find((s) => s.id === r.stallId)?.label}</span>
                     <span className="flex items-center gap-1"><Clock size={12} /> {r.date} · {formatRange(r.startIndex, r.endIndex)}</span>

@@ -24,7 +24,7 @@ export default function App() {
   const { user } = useApp();
 
   return (
-    <div className="min-h-screen bg-[#1F2226]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Navbar />
       <Toast />
       <Routes>

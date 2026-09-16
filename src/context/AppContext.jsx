@@ -5,9 +5,23 @@ const AppContext = createContext(null);
 const STORAGE_KEY = "campus-parking-data-v1";
 
 const initialLots = [
-  { id: "lotA", name: `${venueConfig.locationLabel} A — Main Building`, zone: venueConfig.zones[0].value, rows: 2, cols: 6 },
-  { id: "lotB", name: `${venueConfig.locationLabel} B — East Wing`, zone: venueConfig.zones[0].value, rows: 2, cols: 5 },
-  { id: "lotC", name: `${venueConfig.locationLabel} C — ${venueConfig.zones[1]?.label || "Reserved"}`, zone: venueConfig.zones[1]?.value || venueConfig.zones[0].value, rows: 1, cols: 6 },
+  { id: "b1", name: "Basement 1 - Mapua Makati" },
+];
+
+function makeStalls(prefix, count, category) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `${prefix}${i + 1}`,
+    lotId: "b1",
+    label: `${prefix}${i + 1}`,
+    category,
+  }));
+}
+
+const initialStalls = [
+  ...makeStalls("S", 31, "student"),
+  ...makeStalls("E", 29, "employee"),
+  ...makeStalls("F", 12, "faculty"),
+  ...makeStalls("PWD", 2, "pwd"),
 ];
 
 export const TIME_BOUNDARIES = [
@@ -23,17 +37,6 @@ function rangesOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && bStart < aEnd;
 }
 
-function buildStalls(lots) {
-  const stalls = [];
-  lots.forEach((lot) => {
-    const total = lot.rows * lot.cols;
-    for (let i = 1; i <= total; i++) {
-      stalls.push({ id: `${lot.id}-${i}`, lotId: lot.id, label: `${lot.id.slice(-1).toUpperCase()}${i}` });
-    }
-  });
-  return stalls;
-}
-
 function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -46,7 +49,7 @@ function loadPersisted() {
 export function AppProvider({ children }) {
   const persisted = useRef(loadPersisted()).current;
   const [lots, setLots] = useState(persisted?.lots || initialLots);
-  const [stalls] = useState(() => buildStalls(persisted?.lots || initialLots));
+  const [stalls] = useState(() => persisted?.stalls || initialStalls);
   const [reservations, setReservations] = useState(persisted?.reservations || []);
   const [users, setUsers] = useState(persisted?.users || []);
   const [user, setUser] = useState(null); // session not restored — log in each visit
@@ -57,7 +60,7 @@ export function AppProvider({ children }) {
   // no server or network connection required.
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lots, reservations, users }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lots, stall, reservations, users }));
     } catch {
       // storage unavailable — fail silently, app still works in-memory
     }
@@ -82,6 +85,11 @@ export function AppProvider({ children }) {
       (r) => r.stallId === stallId && r.date === date &&
       rangesOverlap(startIndex, endIndex, r.startIndex, r.endIndex)
     );
+
+  const ROLE_CATEGORY_MAP = { student: "student", faculty: "faculty", employee: "employee" };
+
+  const stallCategoryAllowed = (stall, role) =>
+    stall.category === "pwd" ? false : stall.category === ROLE_CATEGORY_MAP[role];
 
   const lotStalls = (lotId) => stalls.filter((s) => s.lotId === lotId);
 
@@ -205,6 +213,7 @@ export function AppProvider({ children }) {
     cancelReservation,
     addLot,
     myReservations,
+    stallCategoryAllowed,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

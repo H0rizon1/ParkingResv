@@ -13,7 +13,8 @@ const CONFIGS = {
     idFieldPlaceholder: "2023-00123",
     roles: [
       { value: "student", label: "Student" },
-      { value: "faculty", label: "Faculty" },
+      { value: "faculty", label: "Faculty/Dept Head" },
+      { value: "employee", label: "Employee" },
       { value: "admin", label: "Admin" },
     ],
     zones: [

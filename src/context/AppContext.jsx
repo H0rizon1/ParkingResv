@@ -60,7 +60,7 @@ export function AppProvider({ children }) {
   // no server or network connection required.
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lots, stall, reservations, users }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lots, stalls, reservations, users }));
     } catch {
       // storage unavailable — fail silently, app still works in-memory
     }
@@ -99,6 +99,12 @@ export function AppProvider({ children }) {
     return { total: all.length, available: all.length - taken };
   };
 
+  const categoryAvailability = (category, date, startIndex, endIndex) => {
+    const all = stalls.filter((s) => s.category === category);
+    const taken = all.filter((s) => isStallTaken(s.id, date, startIndex, endIndex)).length;
+    return { total: all.length, available: category === "pwd" ? 0 : all.length - taken };
+  }
+
   const totalAvailableNow = useMemo(() => {
     const now = new Date().toISOString().slice(0, 10);
     return lots.reduce((sum, l) => sum + lotAvailability(l.id, now, 0, 1).available, 0);
@@ -131,10 +137,10 @@ export function AppProvider({ children }) {
     const found = users.find((u) => u.idNum === id && u.password === password);
     if (!found) {
       showToast("No matching account — check your ID/password or register", "bad");
-      return false;
+      return null;
     }
     setUser(found);
-    return true;
+    return found;
   };
 
   const logout = () => setUser(null);
@@ -167,7 +173,8 @@ export function AppProvider({ children }) {
       date,
       startIndex,
       endIndex,
-      user: user.name,
+      userId: user.idNum,
+      username: user.name,
       vehiclePlate
     };
     setReservations((prev) => [...prev, newRes]);
@@ -187,7 +194,7 @@ export function AppProvider({ children }) {
   };
 
   const myReservations = useMemo(
-    () => reservations.filter((r) => r.user === user?.name),
+    () => reservations.filter((r) => r.userId === user?.idNum),
     [reservations, user]
   );
 
@@ -214,6 +221,7 @@ export function AppProvider({ children }) {
     addLot,
     myReservations,
     stallCategoryAllowed,
+    categoryAvailability
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

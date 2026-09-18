@@ -16,6 +16,11 @@ export default function Login() {
     if (ok) navigate("/dashboard");
   };
 
+  const handleLogin = () => {
+    const found = login(form);
+    if (found) navigate(found.role === "admin" ? "/admin" : "/dashboard");
+  };
+
   return (
     <div className="min-h-screen w-full font-body flex items-center justify-center p-6 bg-[var(--bg)]">
       <div className="w-full max-w-md">

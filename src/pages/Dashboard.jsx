@@ -6,7 +6,7 @@ import { venueConfig } from "../config/venueConfig.js";
 import Pill from "../components/Pill.jsx";
 
 export default function Dashboard() {
-  const { lots, stalls, lotAvailability, myReservations } = useApp();
+  const { lots, stalls, lotAvailability, myReservations, categoryAvailability } = useApp();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [startIndex, setStartIndex] = useState(0);
@@ -96,19 +96,22 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {lots.map((lot) => {
-          const { total, available } = lotAvailability(lot.id, selectedDate, startIndex, endIndex);
+        {[
+          { category: "student", label: "Student" },
+          { category: "employee", label: "Employee" },
+          { category: "faculty", label: "Faculty/Dept Head" },
+        ].map((c) => {
+          const { total, available } = categoryAvailability(c.category, selectedDate, startIndex, endIndex);
           return (
-            <div key={lot.id} className="p-4 rounded-md bg-[var(--surface)] border border-[var(--border-c)]">
+            <div key={c.category} className="p-4 rounded-md bg-[var(--surface)] border border-[var(--border-c)]">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-display text-sm uppercase text-[var(--text)]">{lot.name}</span>
-                <Pill color={lot.zone === "Faculty" ? "#FFC72C" : "#4CAF6D"}>{lot.zone}</Pill>
+                <span className="font-display text-sm uppercase text-[var(--text)]">{c.label}</span>
               </div>
-              <div className="text-3xl font-display" style={{ color: available > 0 ? "#4CAF6D" : "#E2574C" }}>
+              <div className="text-3xl font-display" style={{ color: available > 0 ? "#4CAF6D" : "#E67E22" }}>
                 {available}/{total}
               </div>
-              <div className="text-xs text-[var(--text-muted)]">{venueConfig.spaceLabel.toLowerCase()}s open{venueConfig.showPricing ? ` · ₱${venueConfig.ratePerSlot}/slot` : ""}</div>
-            </div>
+            <div className="text-xs text-[var(--text-muted)]">stalls open</div>
+          </div>
           );
         })}
       </div>

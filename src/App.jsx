@@ -20,6 +20,20 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireNonAdmin({ children }) {
+  const { user } = useApp();
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role === "admin") return <Navigate to="/admin" replace />;
+  return children;
+}
+
+function RequireAdmin({ children }) {
+  const { user } = useApp();
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role != "admin") return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 export default function App() {
   const { user } = useApp();
 
@@ -32,11 +46,11 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-        <Route path="/reserve" element={<RequireAuth><Reserve /></RequireAuth>} />
-        <Route path="/my-reservations" element={<RequireAuth><MyReservations /></RequireAuth>} />
-        <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-        <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
+        <Route path="/dashboard" element={<RequireNonAdmin><Dashboard /></RequireNonAdmin>} />
+        <Route path="/reserve" element={<RequireNonAdmin><Reserve /></RequireNonAdmin>} />
+        <Route path="/my-reservations" element={<RequireNonAdmin><MyReservations /></RequireNonAdmin>} />
+        <Route path="/profile" element={<RequireNonAdmin><Profile /></RequireNonAdmin>} />
+        <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

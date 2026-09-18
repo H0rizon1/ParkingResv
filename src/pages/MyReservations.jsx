@@ -5,6 +5,8 @@ import { useApp, formatRange } from "../context/AppContext.jsx";
 export default function MyReservations() {
   const { lots, stalls, myReservations, cancelReservation } = useApp();
 
+
+
   return (
     <div className="p-6">
       <h2 className="font-display text-xl uppercase mb-4 text-[var(--text)]">My Reservations</h2>

@@ -18,6 +18,10 @@
   --text-muted: #6e6e6e;
 }
 
+html {
+  font-size: 18px;
+}
+
 body {
   background: var(--bg);
   transition: background 0.15s ease, color 0.15s ease;

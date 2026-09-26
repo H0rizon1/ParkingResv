@@ -6,7 +6,7 @@ export const VENUE_TYPE = "campus"; // "campus" | "establishment"
 const CONFIGS = {
   campus: {
     venueLabel: "Campus",
-    appName: "Campus Parking",
+    appName: "Cardinal Parking",
     locationLabel: "Lot",
     spaceLabel: "Stall",
     idFieldLabel: "Student / Employee ID",

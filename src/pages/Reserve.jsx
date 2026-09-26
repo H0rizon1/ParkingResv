@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Car, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useApp, TIME_BOUNDARIES } from "../context/AppContext.jsx";
+import { useApp, TIME_BOUNDARIES, MAX_ACTIVE_RESERVATIONS } from "../context/AppContext.jsx";
 import { venueConfig } from "../config/venueConfig.js";
 import StallIcon from "../components/StallIcon.jsx";
 import FloorPlan from "../components/FloorPlan.jsx";
 
 
 export default function Reserve() {
-  const { lots, stalls, user, isStallTaken, reserveStall, stallCategoryAllowed } = useApp();
+  const { lots, stalls, user, isStallTaken, reserveStall, stallCategoryAllowed, showToast, activeReservationCount } = useApp();
   const navigate = useNavigate();
   const lotId = lots[0].id;
 
@@ -17,6 +17,23 @@ export default function Reserve() {
   const [selectedStall, setSelectedStall] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(1);
+
+  const limitReached = activeReservationCount >= MAX_ACTIVE_RESERVATIONS;
+
+  const handleDateChange = (e) => {
+    const value = e.target.value;
+    if (!value) {
+      setSelectedDate(value);
+      return;
+    }
+    const [y, m, d] = value.split("-").map(Number);
+    const isSunday = new Date(y, m - 1, d).getDay() === 0;
+    if (isSunday) {
+      showToast("Reservations are only available Monday–Saturday", "bad");
+      return; // keep the previous valid selection
+    }
+    setSelectedDate(value);
+  };
 
   const handleConfirm = () => {
     if (!selectedStall || !selectedVehicle) return;
@@ -34,10 +51,25 @@ export default function Reserve() {
   return (
     <div className="p-6">
       <h2 className="font-display text-xl uppercase mb-1 text-[var(--text)]">Reserve a {venueConfig.spaceLabel}</h2>
-      <p className="text-xs mb-4 text-[var(--text-muted)]">{lots[0].name}</p>
+      <p className="text-xs mb-2 text-[var(--text-muted)]">{lots[0].name}</p>
+
+      <div className="mb-4 px-3 py-2 rounded text-xs bg-[var(--surface)] border border-[var(--border-c)] text-[var(--text-secondary)]">
+        Reservations are open Monday–Saturday, any time slot. Each student/faculty/employee may hold up to{" "}
+        {MAX_ACTIVE_RESERVATIONS} active reservations at once.{" "}
+        <span className={limitReached ? "text-[#E2574C] font-medium" : ""}>
+          You currently have {activeReservationCount}/{MAX_ACTIVE_RESERVATIONS} active reservations.
+        </span>
+      </div>
+
+      {limitReached && (
+        <div className="mb-4 px-3 py-2 rounded text-xs bg-[#E2574C]/10 border border-[#E2574C] text-[#E2574C]">
+          You've reached the max of {MAX_ACTIVE_RESERVATIONS} active reservations. Cancel one from{" "}
+          <span className="underline">My Reservations</span> to book another.
+        </div>
+      )}
 
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
+        <input type="date" value={selectedDate} onChange={handleDateChange}
           className="px-3 py-2 rounded text-sm bg-[var(--surface)] text-[var(--text)] border border-[var(--border-c)]" />
         <select value={startIndex} onChange={(e) => {
             const newStart = Number(e.target.value);
@@ -95,9 +127,12 @@ export default function Reserve() {
         <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm inline-block bg-[#5A5D62]" /> Not for your role</span>
       </div>
 
-      <button onClick={handleConfirm} disabled={!selectedStall || !selectedVehicle}
+      <button onClick={handleConfirm} disabled={!selectedStall || !selectedVehicle || limitReached}
         className="px-6 py-3 rounded font-display uppercase tracking-wide flex items-center gap-2"
-        style={{ background: selectedStall && selectedVehicle ? "#4CAF6D" : "var(--border-c)", color: selectedStall && selectedVehicle ? "#0D1A12" : "var(--text-muted)" }}>
+        style={{
+          background: selectedStall && selectedVehicle && !limitReached ? "#4CAF6D" : "var(--border-c)",
+          color: selectedStall && selectedVehicle && !limitReached ? "#0D1A12" : "var(--text-muted)",
+        }}>
         Confirm Reservation <Check size={16} />
       </button>
     </div>

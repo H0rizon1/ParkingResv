@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Clock, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useApp, TIME_BOUNDARIES, formatRange } from "../context/AppContext.jsx";
+import { useApp, TIME_BOUNDARIES, formatRange, compareByDateTime } from "../context/AppContext.jsx";
 import { venueConfig } from "../config/venueConfig.js";
 import Pill from "../components/Pill.jsx";
 
@@ -12,7 +12,10 @@ export default function Dashboard() {
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(1);
 
-  const upcoming = myReservations[myReservations.length - 1];
+  const now = new Date().toISOString().slice(0, 10);
+  const upcoming = myReservations
+    .filter((r) => (r.status || "approved") === "approved" && r.date >= now)
+    .sort(compareByDateTime)[0];
 
   return (
     <div className="p-6">

@@ -29,12 +29,62 @@ export const TIME_BOUNDARIES = [
   "3:00 PM", "4:30 PM", "6:00 PM", "7:30 PM", "9:00 PM",
 ];
 
+function timeToMinutes(t) {
+  const [time, meridiem] = t.split(" ");
+  let [h, m] = time.split(":").map(Number);
+  if (meridiem === "PM" && h !== 12) h += 12;
+  if (meridiem === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+const TIME_BOUNDARY_MINUTES = TIME_BOUNDARIES.map(timeToMinutes);
+
+// Finds which [startIndex, endIndex] slot the current wall-clock time falls
+// into. Outside operating hours (before 7:30 AM or after 9:00 PM) it clamps
+// to the nearest edge slot rather than returning nothing.
+function currentSlotIndexes() {
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  for (let i = 0; i < TIME_BOUNDARY_MINUTES.length - 1; i++) {
+    if (nowMinutes >= TIME_BOUNDARY_MINUTES[i] && nowMinutes < TIME_BOUNDARY_MINUTES[i + 1]) {
+      return [i, i + 1];
+    }
+  }
+  if (nowMinutes < TIME_BOUNDARY_MINUTES[0]) return [0, 1];
+  return [TIME_BOUNDARIES.length - 2, TIME_BOUNDARIES.length - 1];
+}
+
 export function formatRange(startIndex, endIndex) {
   return `${TIME_BOUNDARIES[startIndex]} - ${TIME_BOUNDARIES[endIndex]}`;
 }
 
+// Sorts reservations by date then time slot. Coerces `date` to a string first
+// so a malformed/legacy record (e.g. a stray Date object from old test data)
+// can never crash the whole page — it'll just sort oddly instead of throwing.
+export function compareByDateTime(a, b) {
+  const aDate = String(a?.date ?? "");
+  const bDate = String(b?.date ?? "");
+  if (aDate === bDate) return (a?.startIndex ?? 0) - (b?.startIndex ?? 0);
+  return aDate.localeCompare(bDate);
+}
+
 function rangesOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && bStart < aEnd;
+}
+
+// Reservation guidelines from department review:
+// available Monday–Saturday (no Sunday), any time slot,
+// max 3 active (today-or-future) reservations per student at once.
+export const MAX_ACTIVE_RESERVATIONS = 3;
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// date is a "YYYY-MM-DD" string; parse as local midnight to avoid
+// timezone shifting it to the wrong day of week.
+function isSunday(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 0;
 }
 
 function loadPersisted() {
@@ -83,6 +133,7 @@ export function AppProvider({ children }) {
   const isStallTaken = (stallId, date, startIndex, endIndex) =>
     reservations.some(
       (r) => r.stallId === stallId && r.date === date &&
+      (r.status || "approved") !== "rejected" &&
       rangesOverlap(startIndex, endIndex, r.startIndex, r.endIndex)
     );
 
@@ -107,7 +158,8 @@ export function AppProvider({ children }) {
 
   const totalAvailableNow = useMemo(() => {
     const now = new Date().toISOString().slice(0, 10);
-    return lots.reduce((sum, l) => sum + lotAvailability(l.id, now, 0, 1).available, 0);
+    const [startIdx, endIdx] = currentSlotIndexes();
+    return lots.reduce((sum, l) => sum + lotAvailability(l.id, now, startIdx, endIdx).available, 0);
   }, [lots, reservations]);
 
   const register = ({ name, id, email, password, plate, role }) => {
@@ -161,7 +213,25 @@ export function AppProvider({ children }) {
     showToast("Vehicle removed", "ok");
   };
 
+  const activeReservationCount = useMemo(
+    () => reservations.filter(
+      (r) => r.userId === user?.idNum && r.date >= todayStr() && (r.status || "approved") !== "rejected"
+    ).length,
+    [reservations, user]
+  );
+
   const reserveStall = ({ stallId, lotId, date, startIndex, endIndex, vehiclePlate }) => {
+    if (isSunday(date)) {
+      showToast("Reservations are only available Monday–Saturday", "bad");
+      return false;
+    }
+    const activeCount = reservations.filter(
+      (r) => r.userId === user.idNum && r.date >= todayStr() && (r.status || "approved") !== "rejected"
+    ).length;
+    if (activeCount >= MAX_ACTIVE_RESERVATIONS) {
+      showToast(`You've reached the limit of ${MAX_ACTIVE_RESERVATIONS} active reservations`, "bad");
+      return false;
+    }
     if (isStallTaken(stallId, date, startIndex, endIndex)) {
       showToast("That stall overlaps an existing booking — pick another time or stall", "bad");
       return false;
@@ -175,11 +245,22 @@ export function AppProvider({ children }) {
       endIndex,
       userId: user.idNum,
       username: user.name,
-      vehiclePlate
+      vehiclePlate,
+      status: "pending",
     };
     setReservations((prev) => [...prev, newRes]);
-    showToast("Spot reserved. See you there.", "ok");
+    showToast("Request sent to admin for approval.", "ok");
     return true;
+  };
+
+  const approveReservation = (id) => {
+    setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: "approved" } : r)));
+    showToast("Reservation approved", "ok");
+  };
+
+  const rejectReservation = (id) => {
+    setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)));
+    showToast("Reservation rejected", "warn");
   };
 
   const cancelReservation = (id) => {
@@ -221,7 +302,10 @@ export function AppProvider({ children }) {
     addLot,
     myReservations,
     stallCategoryAllowed,
-    categoryAvailability
+    categoryAvailability,
+    activeReservationCount,
+    approveReservation,
+    rejectReservation,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
